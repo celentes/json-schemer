@@ -38,7 +38,15 @@ def schema_generator(schema, json_key, json_value):
 
 schema_generator(newSchema("default"), "", table)
 
-for name, schema in schemas.items():
+def createTableFromSchema(name, schema):
+    # atm just report what we've found
     print("Printing schema", name)
     for k, v in schema.items():
         print("\t", k, v)
+
+for name, schema in schemas.items():
+    createTableFromSchema(name, schema)
+
+def parseData(tables, schemas, current_schema, json):
+    # should also be recursive
+    pass
