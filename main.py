@@ -11,31 +11,32 @@ def newSchema(name):
 
 id_type = "id"
 
-def schema_generator(json_dict, schema, prefix=""):
-    for k, v in json_dict.items():
-        # handle nested dict
-        if isinstance(v, dict):
-            # flatten nested dictionary into schema
-            newprefix = prefix + k + "_"
-            schema_generator(v, schema, newprefix)
-        # handle nested list
-        elif isinstance(v, list):
-            # create new schema
-            newschema = newSchema(k)
-            # set up references from current schema
-            # and we look up the correct schema by k
-            schema[k] = id_type
-            newschema[id_type] = int
-            # if our new schema is a dictionary, fill the schema
-            if isinstance(v[0], dict):
-                schema_generator(v[0], newschema, "")
-            # if it is not a dictionary, it's a list of values
+def schema_generator(schema, json_key, json_value):
+    if isinstance(json_value, dict):
+        for k, v in json_value.items():
+            # handle nested dict
+            if isinstance(v, dict):
+                # flatten nested dictionary into schema
+                newprefix = json_key + k + "_"
+                schema_generator(schema, newprefix, v)
             else:
-                newschema["value"] = type(v)
-        else:
-            schema[prefix + k] = type(v)
+                newprefix = json_key + k
+                schema_generator(schema, newprefix, v)
+    elif isinstance(json_value, list):
+        # create new schema
+        newschema = newSchema(json_key)
+        # set up references from current schema
+        # and we look up the correct schema by k
+        schema[json_key] = id_type
+        newschema[id_type] = int
+        # recursively go into the first element
+        # NOTE: the assumption here is that the list is made of
+        # self-similar items, and they are not lists of lists
+        schema_generator(newschema, "", json_value[0])
+    else:
+        schema[json_key] = type(json_value)
 
-schema_generator(table, newSchema("default"), "")
+schema_generator(newSchema("default"), "", table)
 
 for name, schema in schemas.items():
     print("Printing schema", name)
