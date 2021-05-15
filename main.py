@@ -9,6 +9,12 @@ def newSchema(name):
     schemas[name] = {}
     return schemas[name]
 
+def schemaExists(name):
+    return name in schemas.keys()
+
+def getSchema(name):
+    return schemas[name]
+
 id_type = "id"
 
 def schema_generator(schema, json_key, json_value):
@@ -22,19 +28,21 @@ def schema_generator(schema, json_key, json_value):
             else:
                 newprefix = json_key + k
                 schema_generator(schema, newprefix, v)
+    # NOTE: the assumption here is that the list is made of
+    # self-similar items, and they are not lists of lists
     elif isinstance(json_value, list):
-        # create new schema
-        newschema = newSchema(json_key)
+        # get or create schema
+        newschema = getSchema(json_key) if schemaExists(json_key) else newSchema(json_key)
         # set up references from current schema
         # and we look up the correct schema by k
         schema[json_key] = id_type
         newschema[id_type] = int
-        # recursively go into the first element
-        # NOTE: the assumption here is that the list is made of
-        # self-similar items, and they are not lists of lists
-        schema_generator(newschema, "", json_value[0])
+        # recursively go into every element
+        for v in json_value:
+            schema_generator(newschema, "", v)
     else:
-        schema[json_key] = type(json_value)
+        if not json_key in schema.keys():
+            schema[json_key] = type(json_value)
 
 schema_generator(newSchema("default"), "", table)
 
