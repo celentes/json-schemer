@@ -41,8 +41,11 @@ def schema_generator(schema, json_key, json_value):
         for v in json_value:
             schema_generator(newschema, "", v)
     else:
-        if not json_key in schema.keys():
-            schema[json_key] = type(json_value)
+        key = json_key
+        if key == "":
+            key = "value"
+        if not key in schema.keys():
+            schema[key] = type(json_value)
 
 schema_generator(newSchema("default"), "", table)
 
